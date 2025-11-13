@@ -6,21 +6,40 @@ app = Flask(__name__)
 
 DATA_FILE = "ads_credits.json"
 
-# Carica o crea file credito
-if not os.path.exists(DATA_FILE):
-    with open(DATA_FILE, "w") as f:
-        json.dump({}, f)
 
-
+# ------------------------
+#   LOAD + AUTO-REPAIR
+# ------------------------
 def load_data():
-    with open(DATA_FILE, "r") as f:
-        return json.load(f)
+    if not os.path.exists(DATA_FILE):
+        return {}
+
+    try:
+        with open(DATA_FILE, "r") as f:
+            data = json.load(f)
+
+        # Se è una lista (errore da Railway), resettiamo
+        if isinstance(data, list):
+            return {}
+
+        # Se non è un dizionario valido, resettiamo
+        if not isinstance(data, dict):
+            return {}
+
+        return data
+
+    except:
+        return {}  # se file è corrotto → reset
+
 
 def save_data(data):
     with open(DATA_FILE, "w") as f:
         json.dump(data, f, indent=2)
 
 
+# ------------------------
+#   PAGINA UNLOCK
+# ------------------------
 @app.route("/unlock", methods=["GET"])
 def unlock():
     uid = str(request.args.get("uid"))
@@ -31,7 +50,6 @@ def unlock():
     data = load_data()
     user = data.get(uid, {"views": 0, "days": 0})
 
-    # --- HTML SAFE, NO BROKEN QUOTES ---
     html = f"""
     <!DOCTYPE html>
     <html>
@@ -55,6 +73,9 @@ def unlock():
     return html
 
 
+# ------------------------
+#   PAGINA WATCH
+# ------------------------
 @app.route("/watch", methods=["GET"])
 def watch():
     uid = str(request.args.get("uid"))
@@ -64,7 +85,6 @@ def watch():
 
     user["views"] += 1
 
-    # Se 5 ads → 1 giorno
     if user["views"] >= 5:
         user["views"] = 0
         user["days"] += 1
@@ -96,10 +116,16 @@ def watch():
     return html
 
 
+# ------------------------
+#       HOME
+# ------------------------
 @app.route("/")
 def home():
     return "BitBot Unlock Server — Online"
 
 
+# ------------------------
+#   MAIN
+# ------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
