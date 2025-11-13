@@ -1,4 +1,4 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request
 import json
 import os
 
@@ -31,21 +31,31 @@ def unlock():
     data = load_data()
     user = data.get(uid, {"views": 0, "days": 0})
 
-    return f"""
+    # --- HTML SAFE, NO BROKEN QUOTES ---
+    html = f"""
+    <!DOCTYPE html>
     <html>
+    <head>
+        <title>BitBot Unlock</title>
+        <meta charset="UTF-8">
+    </head>
     <body style="font-family: Arial; text-align:center;">
         <h2>BitBot — Guarda Ads per Sbloccare Giorni</h2>
         <p>Utente: {uid}</p>
         <p>Ads viste: {user['views']} / 5</p>
 
-        <button onclick="window.location='/watch?uid={uid}'" 
-                style="padding:20px;font-size:22px;">Guarda Pubblicità</button>
+        <button onclick="window.location='/watch?uid={uid}'"
+                style="padding:20px; font-size:22px; margin-top:20px;">
+            Guarda Pubblicità
+        </button>
     </body>
     </html>
     """
 
+    return html
 
-@app.route("/watch")
+
+@app.route("/watch", methods=["GET"])
 def watch():
     uid = str(request.args.get("uid"))
     data = load_data()
@@ -62,13 +72,34 @@ def watch():
     data[uid] = user
     save_data(data)
 
-    return f"""
+    html = f"""
+    <!DOCTYPE html>
     <html>
+    <head>
+        <title>BitBot - Grazie!</title>
+        <meta charset="UTF-8">
+    </head>
     <body style="font-family: Arial; text-align:center;">
         <h2>Grazie!</h2>
         <p>Hai visto un ad.</p>
         <p>Ads viste: {user['views']} / 5</p>
         <p>Giorni accumulati: {user['days']}</p>
 
-        <a href="/unlock?uid={uid}" 
-           style="font-size:20px;display:inline-block;margin-top:20px;">Torn
+        <a href="/unlock?uid={uid}"
+           style="font-size:20px; display:inline-block; margin-top:20px;">
+            Torna indietro
+        </a>
+    </body>
+    </html>
+    """
+
+    return html
+
+
+@app.route("/")
+def home():
+    return "BitBot Unlock Server — Online"
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0")
