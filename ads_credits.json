@@ -1,0 +1,14 @@
+[
+  {
+    "uid": 12345,
+    "views_done": 3,
+    "credits_days": 1,
+    "last_granted": "2025-11-11T21:10:51.057571"
+  },
+  {
+    "uid": 123,
+    "views_done": 1,
+    "credits_days": 0,
+    "last_granted": null
+  }
+]
